@@ -4,7 +4,7 @@ Plugin Name: Wordpress Guest Post Plugin
 Plugin URI: http://securenext.com/
 Description: Review posts submitted by the users to approval...
 Author: Securenext Wordpress Malarvizhi Team
-Version: 1.0
+Version: 2.0
 Author URI: http://securenext.com/
 */
 
