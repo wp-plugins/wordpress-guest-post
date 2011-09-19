@@ -5,7 +5,7 @@ Donate Link: http://www.wordpressguestpost.com
 Tags: wordpressguestpost, wordpress guest post, guest post, guest posting, wpguestpost, guest blog, guest blogging, add post, content submission
 Requires at least: 2.8
 Tested up to: 3.1.2
-Stable tag: 1.0
+Stable tag: 2.0
 
 Easily add and approve guest posts to your Wordpress blog with the official Wordpress Guest Post plugin. 
 
