@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Wordpress Guest Post Plugin
-Plugin URI: http://securenext.com/
+Plugin URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 Description: Review posts submitted by the users to approval...
-Author: Securenext Wordpress Malarvizhi Team
-Version: 1.5
-Author URI: http://securenext.com/
+Author: Lisa Angelettie
+Version: 2.0
+Author URI: http://lisaangelettieblog.com/
 */
 
 require_once(dirname(__FILE__).'/../../../wp-config.php');
@@ -16,8 +16,10 @@ register_deactivation_hook(__FILE__, 'wppostreviewbyadmin_uninstall');
 
 add_action('admin_menu', 'wppostreviewbyadmin_admin_menus');
 //add_action('init', 'wppostreviewbyadmin_install');
-add_action('wp_head', 'wppostreviewbyadmin_styling');
 
+add_action('init', 'wppostreviewbyadmin_init');
+add_action('wp_head', 'wppostreviewbyadmin_styling');
+//session_start();
 global $wpdb;
 define("WPUSER_POSTS_TABLE",$wpdb->prefix."usersposts");
 
@@ -25,6 +27,7 @@ wp_enqueue_script('postreviewbyadmin_script',get_bloginfo('wpurl').'/wp-content/
 wp_enqueue_script('inneditor_script',get_bloginfo('wpurl').'/wp-content/plugins/wordpressguestpost/jscripts/tiny_mce/tiny_mce.js');
 
 function wppostreviewbyadmin_init()	{
+	session_start();
 }
 
 function wppostreviewbyadmin_install()	{
@@ -52,7 +55,7 @@ function wppostreviewbyadmin_install()	{
 				`approval` int(11) NOT NULL, PRIMARY KEY  (`ID`) )";
 	$wpdb->query($createqry);
 	add_option('wppostreviewbyadmin_version','1.8');
-	add_option('wppostreviewbyadmin_page', '');
+	add_option('wppostreviewbyadmin_guestpage', '');
 	add_option('wppostreviewbyadmin_adminmailid',get_option('admin_email'));
 	add_option('wppostreviewbyadmin_paginationno',25);
 	add_option('wppostreviewbyadmin_postsubmsg', "Thank you for your recent article submission. We have received it and it's going through the editorial process. Once your article is approved, it will be published to our site and you will receive a confirmation email.");
@@ -108,7 +111,7 @@ function wppostreviewbyadmin_uninstall()	{
 	$table_links = WPUSER_POSTS_TABLE;
 	$wpdb->query("DROP TABLE {$table_links}");
 	delete_option('wppostreviewbyadmin_version');
-	delete_option('wppostreviewbyadmin_page');
+	delete_option('wppostreviewbyadmin_guestpage');
 	delete_option('wppostreviewbyadmin_adminmailid');
 	delete_option('wppostreviewbyadmin_paginationno');
 	delete_option('wppostreviewbyadmin_postsubmsg');
@@ -125,6 +128,7 @@ function wppostreviewbyadmin_styling($Style='original.css')	{
 	if(file_exists($StyleFile) && $Style)	{
 		include_once($StyleFile);
 	}
+//	session_start();
 }
 
 function wppostreviewbyadmin_admin_menus()	{
@@ -413,8 +417,8 @@ function wppostreviewbyadmin_reviewposts()	{
 			?>
 			</tbody>
 		</table>
-		<?php //echo perpagefun($totalselpostdetails,25,$pno,$getcatlist); ?>
-		<?php echo perpagefun($totalselpostdetails,$paginno,$pno,$getcatlist); ?>		
+		<?php //echo wppostreviewbyadmin_perpagefun($totalselpostdetails,25,$pno,$getcatlist); ?>
+		<?php echo wppostreviewbyadmin_perpagefun($totalselpostdetails,$paginno,$pno,$getcatlist); ?>		
 	</div>
 	<?php
 	}
@@ -422,12 +426,14 @@ function wppostreviewbyadmin_reviewposts()	{
 function wppostreviewbyadmin_get_pages() {
 	global $post;
 //	$nonce= wp_create_nonce('kgp_nonce');
-	$myposts = get_posts('post_type=page'); ?>
-	<select id="wppostreviewbyadmin_page" name="wppostreviewbyadmin_page">
+	$args = array('post_type' => 'page', 'numberposts' => -1, 'order'=> 'ASC', 'orderby' => 'menu_order'); 
+//	$myposts = get_posts('post_type=page');
+	$myposts = get_posts($args); ?>
+	<select id="wppostreviewbyadmin_guestpage" name="wppostreviewbyadmin_guestpage">
 	<option value="">Select Wordpress Guest Post Page</option>
 	<?php foreach($myposts as $post) :
 	setup_postdata($post);
-	if(get_option('wppostreviewbyadmin_page')==$post->ID) : ?>
+	if(get_option('wppostreviewbyadmin_guestpage')==$post->ID) : ?>
 	<option SELECTED value="<?php echo $post->ID; ?>"><?php the_title(); ?></option>
 	<?php else : ?>
 	<option value="<?php echo $post->ID; ?>"><?php the_title(); ?></option>
@@ -501,16 +507,17 @@ function wppostreviewbyadmin_settings()	{
 	echo '<div class="wrap">
 			<h2>Settings</h2>
 			<p></p>';
-	if(get_option('wppostreviewbyadmin_page') == "")	{
+	if(get_option('wppostreviewbyadmin_guestpage') == "")	{
 		echo '<div class="error"><p>Please select the page from the dropdown next to "Wordpress Guest Post Page"</p></div>';
 	}
 	if($_POST)	{
-		update_option('wppostreviewbyadmin_page', $_POST['wppostreviewbyadmin_page']);
+		update_option('wppostreviewbyadmin_guestpage', $_POST['wppostreviewbyadmin_guestpage']);
 		update_option('wppostreviewbyadmin_adminmailid', $_POST['adminmailid']);
 		update_option('wppostreviewbyadmin_paginationno', $_POST['paginationno']);
 		update_option('wppostreviewbyadmin_postsubmsg', stripslashes($_POST['postssubmsg']));
 		update_option('wppostreviewbyadmin_postappmsg', stripslashes($_POST['postsappmsg']));
 		update_option('wppostreviewbyadmin_enableeditor', $_POST['enableeditor']);
+		$wppostreviewbyadmin_guestpage = get_option('wppostreviewbyadmin_guestpage');		
 	}
 	//	echo "<div id=\"message\" class=\"updated fade\"><p>Setting will be available on upgraded version</p></div>";
 	?>
@@ -565,6 +572,10 @@ function wppostreviewbyadmin_settings()	{
 
 
 function addpostbyuser_func()	{
+	$plugin_dir_path = dirname(__FILE__);
+	$plugin_directory = plugin_basename(__FILE__);
+	include_once $plugin_dir_path . '/securimage/securimage.php';
+	$securimage = new Securimage();
 	if($_POST['submit']=='Submit Article')	{
 		if(!$_POST['post_title'])	{
 			$error = "Please enter the Title Of Article.";
@@ -572,8 +583,9 @@ function addpostbyuser_func()	{
 		elseif(!is_email($_POST['posted_aemail'], true))	{
 			$error = "Please enter a valid email address.";
 		}
-		
-		
+		elseif($securimage->check($_POST['captcha_code']) == false) {
+			$error = "The security code entered was incorrect.";
+		}
 		else	{
 			$spl_id = wp_insert_userpost($_POST);
 		}
@@ -749,6 +761,27 @@ function addpostbyuser_func()	{
 					</p>
 				</div>
 			</div>
+
+			<div class="addpostinnerdiv">
+				<div class="addpostlbl"><p>Security Code : </p></div>
+				<div class="addpostctrl">
+					<p><img id="captcha" src="<?php echo WP_PLUGIN_URL; ?>/wordpressguestpost/securimage/securimage_show.php" alt="CAPTCHA Image" border="0" /></p>
+				</div>
+			</div>
+
+			<div class="addpostinnerdiv">
+				<div class="addpostlbl"><p></p></div>
+				<div class="addpostctrl">
+					<p>
+<input type="text" name="captcha_code" size="10" maxlength="6" class="txtbg" style="width:130px;" />
+<a href="#" onclick="document.getElementById('captcha').src = '<?php echo WP_PLUGIN_URL; ?>/wordpressguestpost/securimage/securimage_show.php?' + Math.random(); return false">[ Different Image ]</a>					
+					</p>
+				</div>
+			</div>
+			
+
+			
+
 			<div class="addpostinnerdiv"><div style="float:left;width:450px;"><p>&nbsp;</p></div></div>
 			<div class="addpostinnerdiv">
 				<div class="addpostlbl"><p>&nbsp;</p></div>
@@ -762,39 +795,36 @@ function addpostbyuser_func()	{
 		</div>
 	</form>
 	<div style="float:left;width:100%;margin:10px 0px 10px 0px;padding:10px 0px 10px 0px;">
-		<p align="center">Plugin by <a href="http://WordpressGuestPost.com" target="_blank">WordpressGuestPost</a></p>
+		<p align="center">
+			Plugin by <a href="http://lisaangelettieblog.com/wordpress-guest-post-plugin/" target="_blank">WordpressGuestPost</a>
+		</p>
 	</div>
 <?php 
 }	
 }
 
-//add_action('the_content', 'callpostcnt');
-//add_action('thesis_hook_before_post', 'callpostcnt');
+add_action('the_content', 'callpostcnt');
 
-add_action('init', 'callthemename');
-
-function callthemename()	{
+function callpostcnt($content) {
+	global $post;
 	$theme_name = get_current_theme();
-	if($theme_name == "Thesis")	{
-		add_action('thesis_hook_before_post', 'callpostcnt');
+	$wppostreviewbyadmin_guestpage = get_option("wppostreviewbyadmin_guestpage");
+//	if(is_page(get_option('wppostreviewbyadmin_guestpage'))) {
+	if($post->ID == get_option('wppostreviewbyadmin_guestpage')) {
+		if($theme_name == "Thesis")	{
+			add_action('thesis_hook_before_post', 'addpostbyuser_func');
+		}
+		else	{
+			add_action('the_content', 'addpostbyuser_func');
+			return $content = addpostbyuser_func();
+		}
 	}
-	else	{
-		add_action('the_content', 'callpostcnt');
+	else {
+		return $content;
 	}
 }
 
-function callpostcnt()	{
-	global $post; //wordpress post global object
-	$wppostreviewbyadmin_page = get_option('wppostreviewbyadmin_page');
-	if($wppostreviewbyadmin_page == $post->ID)	{
-		addpostbyuser_func();
-	}
-}
-
-
-
-
-function wp_insert_userpost($postarr)	{
+	function wp_insert_userpost($postarr)	{
 	global $wpdb;
 	$post_title			=	$postarr["post_title"];
 	$post_author_name	=	$postarr["posted_aname"].''.$postarr["posted_lname"];
@@ -971,7 +1001,7 @@ function wp_insert_userpost($postarr)	{
 }
 
 
-function perpagefun($total,$limit,$page='',$Search='')	{
+function wppostreviewbyadmin_perpagefun($total,$limit,$page='',$Search='')	{
 	global $_REQUEST,$global_config,$_SESSION;
 	$Searchval=$Search;
 	$totalrecords  = $total;
