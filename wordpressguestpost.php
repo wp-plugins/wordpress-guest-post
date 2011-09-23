@@ -7,7 +7,7 @@ Author: Lisa Angelettie
 Version: 2.0
 Author URI: http://lisaangelettieblog.com/
 */
-
+ 
 require_once(dirname(__FILE__).'/../../../wp-config.php');
 require_once(dirname(__FILE__).'/../../../wp-admin/upgrade-functions.php');
 
