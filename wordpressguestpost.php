@@ -7,7 +7,7 @@ Author: Lisa Angelettie
 Version: 1.1
 Author URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 */
- 
+
 require_once(dirname(__FILE__).'/../../../wp-config.php');
 require_once(dirname(__FILE__).'/../../../wp-admin/upgrade-functions.php');
 
