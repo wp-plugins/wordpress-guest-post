@@ -4,7 +4,7 @@ Contributors: Lisa Angelettie
 Donate Link: http://www.wordpressguestpost.com
 Tags: wordpressguestpost, wordpress guest post, guest post, guest posting, wpguestpost, guest blog, guest blogging, add post, content submission
 Requires at least: 2.8
-Tested up to: 3.1.2
+Tested up to: 3.1.3
 Stable tag: 2.0
 
 Easily add and approve guest posts to your Wordpress blog with the official Wordpress Guest Post plugin. 
@@ -23,24 +23,20 @@ The Wordpress Guest Post plugin is a simple plugin that allows you to accept, ed
 
 * [WordpressGuestPost.com] (http://WordpressGuestPost.com)
 * [Lisa Angelettie Blog] (http://LisaAngelettieBlog.com)
-* [Plugin Support] (http://lisaangelettieblog.com/wordpress-guest-post-plugin/)
+* [Plugin Support] (http://LisaAngelettieBlog.com/wordpress-guest-post-plugin/)
 
 
 == Installation ==
 
 1. Upload the unzipped Wordpress Guest Post files to the plugins directory
 2. Activate the plugin through the 'Plugins' menu in Wordpress
-3. (Optional) Go to the settings page and customize your settings
+3. Go to the settings page to select your guest post page and customize your settings
 
-== Frequently Asked Questions ==
+Get detailed installation instructions at: http://LisaAngelettieBlog.com/wordpress-guest-post-plugin/
 
-= Where do users add their guest posts on my site?
+== License ==
 
-Once you upload and activate the plugin, Wordpress Guest Post will automatically create your "Add Posts" page. This is the page where you will direct article submissions.
-
-= Where are my unapproved guest post submissions?
-
-Click the Wordpress Guest Post link in your Wordpress Admin sidebar. You will be directed to a list of unapproved posts. Once you approve the post, it will allow you to edit the post. It is NOT live yet. After you've edited the post, you can then approve it for publishing to your blog.
+Great news, this plugin is free for everyone! You can use it free of charge on your personal or commercial blog. But if you enjoy this plugin, you can thank me and leave a [small donation] for the time I've spent writing and supporting this plugin. Thanks: http://LisaAngelettieblog.com/donate/
 
 == Support ==
 
@@ -50,15 +46,6 @@ http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 
 == Changelog == 
 
-1.0 - Initial beta test release.
+We maintain a list of changes to the Wordpress Guest Post plugin here:
 
-== Upgrade Notice ==
-
-1.0 - Initial beta test release.
-
-== Screenshots ==
-
-1. A view of the guest post submission page
-2. The list of guest posts submitted to your site
-3. A view of editing a guest post
-
+http://lisaangelettieblog.com/wordpress-guest-post-plugin/
