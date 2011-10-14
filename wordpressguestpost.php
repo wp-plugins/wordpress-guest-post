@@ -2,17 +2,31 @@
 /*
 Plugin Name: Wordpress Guest Post Plugin
 Plugin URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
-Description: Review posts submitted by the users to approval...
+Description: The Wordpress Guest Post plugin is a simple plugin that allows you to accept, edit, & publishguest posts to your blog without writers having to login to your Wordpress Admin area.Easily obtain guest posts without user registration. Users can add their posts right from a form hosted on a page on your blog. No logging in your Wordpress admin. Effortlessly manage and edit post submissions Customizable post submission notification on site and via email Check out more information at: http://WordpressGuestPost.com
 Author: Lisa Angelettie
-Version: 2.0
-Author URI: http://lisaangelettieblog.com/
+Version: 1.1
+Author URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 */
  
 require_once(dirname(__FILE__).'/../../../wp-config.php');
 require_once(dirname(__FILE__).'/../../../wp-admin/upgrade-functions.php');
 
+
+add_action('init', 'gw_load_translation_file');
+
+function gw_load_translation_file() {
+    // relative path to WP_PLUGIN_DIR where the translation files will sit:
+    $plugin_path = dirname(plugin_basename( __FILE__ ) .'/languages/default.mo' );
+    load_plugin_textdomain( 'wordpress-guest-post', false, $plugin_path );
+}
+
+
+
+
 register_activation_hook(__FILE__, 'wppostreviewbyadmin_install');
 register_deactivation_hook(__FILE__, 'wppostreviewbyadmin_uninstall');
+
+
 
 add_action('admin_menu', 'wppostreviewbyadmin_admin_menus');
 //add_action('init', 'wppostreviewbyadmin_install');
@@ -23,8 +37,8 @@ add_action('wp_head', 'wppostreviewbyadmin_styling');
 global $wpdb;
 define("WPUSER_POSTS_TABLE",$wpdb->prefix."usersposts");
 
-wp_enqueue_script('postreviewbyadmin_script',get_bloginfo('wpurl').'/wp-content/plugins/wordpressguestpost/js/postreviewbyadmin_script.js');
-wp_enqueue_script('inneditor_script',get_bloginfo('wpurl').'/wp-content/plugins/wordpressguestpost/jscripts/tiny_mce/tiny_mce.js');
+wp_enqueue_script('postreviewbyadmin_script',get_bloginfo('wpurl').'/wp-content/plugins/wordpress-guest-post/js/postreviewbyadmin_script.js');
+wp_enqueue_script('inneditor_script',get_bloginfo('wpurl').'/wp-content/plugins/wordpress-guest-post/jscripts/tiny_mce/tiny_mce.js');
 
 function wppostreviewbyadmin_init()	{
 	session_start();
@@ -52,6 +66,7 @@ function wppostreviewbyadmin_install()	{
 				`post_type` varchar(20) NOT NULL,
 				`category_ids` varchar(500) NOT NULL,
 				`post_tags` varchar(500) NOT NULL,
+				`post_bio` text NOT NULL,
 				`approval` int(11) NOT NULL, PRIMARY KEY  (`ID`) )";
 	$wpdb->query($createqry);
 	add_option('wppostreviewbyadmin_version','1.8');
@@ -133,7 +148,7 @@ function wppostreviewbyadmin_styling($Style='original.css')	{
 
 function wppostreviewbyadmin_admin_menus()	{
 	add_menu_page('Wordpress Guest Post', 'Wordpress Guest Post', 8, __FILE__, 'wppostreviewbyadmin_reviewposts');
-	add_submenu_page(__FILE__, 'Settings', 'Settings', 8, 'sub-page', 'wppostreviewbyadmin_settings');
+	add_submenu_page(__FILE__, 'Settings', 'Settings', 8, 'wppostreviewbyadmin-page', 'wppostreviewbyadmin_settings');
 }
 
 function wp_delete_userpost($spl_id)	{
@@ -150,6 +165,32 @@ function wp_select_userpost($postid)	{
 	}
 	return $selpostdetails;
 }
+/*add_action('publish_post', 'add_custom_field_automatically');
+function add_custom_field_automatically($post_ID) {
+		global $wpdb;
+			if(!wp_is_post_revision($post_ID)) {
+					$custom_value='test_value';
+					$bio_box ='bio_box';
+					add_post_meta($post_ID, $bio_box,$custom_value, true);
+				}
+			}*/
+ function __update_post_meta( $post_id, $field_name, $value = '' )
+{
+    if ( empty( $value ) OR ! $value )
+    {
+        delete_post_meta( $post_id, $field_name );
+    }
+    elseif ( ! get_post_meta( $post_id, $field_name ) )
+    {
+        add_post_meta( $post_id, $field_name, $value );
+    }
+    else
+    {
+        update_post_meta( $post_id, $field_name, $value );
+    }
+}
+
+
 
 function wppostreviewbyadmin_reviewposts()	{
 	global $wpdb, $wp_rewrite;
@@ -161,13 +202,25 @@ function wppostreviewbyadmin_reviewposts()	{
 		$newpost["post_category"][0] = $_POST["cat"];
 		$newpost["post_date"] = $addpostval[0]["post_date"];
 		$newpost["post_title"] = $_POST["post_title"];
+		//post_content_filtered
 		$newpost["post_content"] = htmlspecialchars(trim($_POST['post_content'], "\t\n "), ENT_QUOTES);
 		$newpost["post_excerpt"] = $_POST["excerpt"];
 		$newpost["post_status"] = 'publish';
 		$newpost["post_type"] = 'post';
 		$newpost["tags_input"] = $_POST["tags"];
+		//$newpost["post_excerpt"] = $_POST["post_bio"];
+		$custom_value=$_POST["post_bio"];
+		$custom_email=$_POST["post_author_email"];
 		$pid = wp_insert_post( $newpost, $wp_error );
+		//$the_post_id = wp_insert_post( $my_post );
+		__update_post_meta( $pid, 'Bio-info', $custom_value );
+
+
 		if($pid != "")	{
+					//$custom_value=$_POST["post_bio"];
+					//$custom_value='Your bio info has been send';
+					//$bio_box ='bio_box';
+					//add_post_meta($post_ID, $bio_box,$custom_value, true);
 			$StrMailcontent1 = '
 				<html>
 					<head><title>Your Post has been approved</title></head>
@@ -239,7 +292,7 @@ function wppostreviewbyadmin_reviewposts()	{
 		theme_advanced_toolbar_align : "left",
 		theme_advanced_statusbar_location : "bottom",
 		theme_advanced_resizing : true,
-
+ 
 		content_css : "css/content.css",
 
 		template_external_list_url : "lists/template_list.js",
@@ -302,6 +355,18 @@ function wppostreviewbyadmin_reviewposts()	{
                   <span class="hint">(2-5 sentences, no paragraphs please)</span></p>
 						</div>
 					</div>
+                    
+					<div style="float:left; width:580px;">
+						<div style="float:left;width:175px;"><p>Tags: </p></div>
+						<div style="float:left;width:400px;">
+					<p><textarea id="tags" name="tags" class="txtareabgsum" cols="45" rows="2"><?php echo $unapost[0]["post_tags"]; ?></textarea><br /></p>
+                  <br />
+                  <span class="hint">(Use comma seperate(,) between two tags)</span></p>
+						</div>
+					</div>
+					
+	
+					
 					<div style="float:left; width:580px;">
 						<div style="float:left;width:175px;"><p>Article Content : </p></div>
 						<div style="float:left;width:400px;">
@@ -321,6 +386,22 @@ function wppostreviewbyadmin_reviewposts()	{
 							<p><?php wp_dropdown_categories($pcatsary); ?></p>
 						</div>
 					</div>
+                    
+   			<div class="addpostinnerdiv">
+				<div class="addpostlbl"><p>Biographical Info : </p></div>
+				<div class="addpostctrl">
+					<p>
+                        <textarea id="post_bio" name="post_bio" class="txtareabgsum" cols="40" rows="5">
+						<?php echo $unapost[0]["post_bio"]; ?></textarea>
+                        <br />
+                        </p>
+
+				</div>
+			</div>
+     
+   
+   
+                    
 					<div style="float:left;width:580px;"><div style="float:left;width:450px;"><p>&nbsp;</p></div></div>
 					<div style="float:left; width:580px;">
 						<div style="float:left;width:450px;">
@@ -407,8 +488,8 @@ function wppostreviewbyadmin_reviewposts()	{
 						echo "<td>". $hh->post_title."</td>\n";
 						echo "<td>". $hh->post_author_name."</td>\n";
 						echo "<td>". $hh->post_date."</td>\n";
-						echo "<td><a class='view' href='admin.php?page=wordpressguestpost/wordpressguestpost.php&amp;sns_reviewposts_view=approve&amp;sns_reviewposts_id={$hh->ID}'>Approve</a></td>\n";
-						echo "<td><a class='view' href='admin.php?page=wordpressguestpost/wordpressguestpost.php&amp;sns_reviewposts_view=disapprove&amp;sns_reviewposts_id={$hh->ID}' onclick=\"return confirm('" . js_escape(sprintf( __("You are about to delete the slider image '%s'.\n'OK' to delete, 'Cancel' to stop.", 'slider_images'), $hh->id)) . "' );\">Disapprove</a></td>\n";						
+						echo "<td><a class='view' href='admin.php?page=wordpress-guest-post/wordpressguestpost.php&amp;sns_reviewposts_view=approve&amp;sns_reviewposts_id={$hh->ID}'>Approve</a></td>\n";
+						echo "<td><a class='view' href='admin.php?page=wordpress-guest-post/wordpressguestpost.php&amp;sns_reviewposts_view=disapprove&amp;sns_reviewposts_id={$hh->ID}' onclick=\"return confirm('" . js_escape(sprintf( __("You are about to delete the slider image '%s'.\n'OK' to delete, 'Cancel' to stop.", 'slider_images'), $hh->id)) . "' );\">Disapprove</a></td>\n";						
 						echo "</tr>";
 						$class = empty($class)?"alternate":"";
 						$i++;
@@ -583,9 +664,9 @@ function addpostbyuser_func()	{
 		elseif(!is_email($_POST['posted_aemail'], true))	{
 			$error = "Please enter a valid email address.";
 		}
-		elseif($securimage->check($_POST['captcha_code']) == false) {
-			$error = "The security code entered was incorrect.";
-		}
+		//elseif($securimage->check($_POST['captcha_code']) == false) {
+			//$error = "The security code entered was incorrect.";
+		//}
 		else	{
 			$spl_id = wp_insert_userpost($_POST);
 		}
@@ -608,6 +689,7 @@ function addpostbyuser_func()	{
 				<tr><td valign="top" nowrap="nowrap" colspan="3"><h2>Preview the post</h2></td></tr>
 				<tr>
 					<td valign="top" nowrap="nowrap">Post Title </td>
+
 					<td valign="top" nowrap="nowrap"> : </td>
 					<td valign="top" nowrap="nowrap">'.$post_title.'</td>
 				</tr>
@@ -700,7 +782,7 @@ function addpostbyuser_func()	{
 	<form id="frmaddpost" name="frmaddpost" method="post" action="" enctype="multipart/form-data">
 		<div class="addpostmaindiv">
 			<div class="addpostinnerdiv">
-				<div class="addpostlbl"><p>Title Of Article : </p></div>
+				<div class="addpostlbl"><p><?php echo 'Title Of Article'; ?> </p></div>
 				<div class="addpostctrl">
 					<p><input type="text" id="title" class="txtbg" value="<?php echo $_POST['post_title']; ?>" size="30" name="post_title" /><br /><span class="hint">(100 characters max)</span>
 					</p>
@@ -728,6 +810,12 @@ function addpostbyuser_func()	{
 				<div class="addpostlbl"><p>Article Summary : </p></div>
 				<div class="addpostctrl">
 					<p><textarea id="excerpt" name="excerpt" class="txtareabgsum" cols="40" rows="5"><?php echo $_POST['excerpt']; ?></textarea><br /><span class="hint">(2-5 sentences, no paragraphs please)</span></p>
+				</div>
+			</div>
+			<div class="addpostinnerdiv">
+				<div class="addpostlbl"><p>Tags : </p></div>
+				<div class="addpostctrl">
+					<p><textarea id="tags" name="tags" class="txtareabgsum" cols="40" rows="5"><?php echo $_POST['tags']; ?></textarea><br /></p>
 				</div>
 			</div>
 			<div class="addpostinnerdiv">
@@ -763,9 +851,23 @@ function addpostbyuser_func()	{
 			</div>
 
 			<div class="addpostinnerdiv">
+				<div class="addpostlbl"><p>Biographical Info : </p></div>
+				<div class="addpostctrl">
+					<p>
+                        
+                        <textarea id="post_bio" name="post_bio" class="txtareabgsum" cols="40" rows="5">
+						<?php echo $_POST['post_bio']; ?></textarea>
+                        <br />
+
+					</p>
+				</div>
+			</div>
+
+
+			<div class="addpostinnerdiv">
 				<div class="addpostlbl"><p>Security Code : </p></div>
 				<div class="addpostctrl">
-					<p><img id="captcha" src="<?php echo WP_PLUGIN_URL; ?>/wordpressguestpost/securimage/securimage_show.php" alt="CAPTCHA Image" border="0" /></p>
+					<p><img id="captcha" src="<?php echo WP_PLUGIN_URL; ?>/wordpress-guest-post/securimage/securimage_show.php" alt="CAPTCHA Image" border="0" /></p>
 				</div>
 			</div>
 
@@ -774,7 +876,7 @@ function addpostbyuser_func()	{
 				<div class="addpostctrl">
 					<p>
 <input type="text" name="captcha_code" size="10" maxlength="6" class="txtbg" style="width:130px;" />
-<a href="#" onclick="document.getElementById('captcha').src = '<?php echo WP_PLUGIN_URL; ?>/wordpressguestpost/securimage/securimage_show.php?' + Math.random(); return false">[ Different Image ]</a>					
+<a href="#" onclick="document.getElementById('captcha').src = '<?php echo WP_PLUGIN_URL; ?>/wordpress-guest-post/securimage/securimage_show.php?' + Math.random(); return false">[ Different Image ]</a>					
 					</p>
 				</div>
 			</div>
@@ -795,21 +897,54 @@ function addpostbyuser_func()	{
 		</div>
 	</form>
 	<div style="float:left;width:100%;margin:10px 0px 10px 0px;padding:10px 0px 10px 0px;">
-		<p align="center">
-			Plugin by <a href="http://lisaangelettieblog.com/wordpress-guest-post-plugin/" target="_blank">WordpressGuestPost</a>
-		</p>
+		<!--<p align="center">
+			Plugin by <a href="http://lisaangelettieblog.com/wordpress-guest-post-plugin/" target="_blank">wordpress-guest-post</a>
+		</p>-->
 	</div>
 <?php 
 }	
 }
 
 add_action('the_content', 'callpostcnt');
+add_action('wp_head', 'author_bio_style'); 
+
+function author_bio_style()
+{
+	// this is where we'll style our box
+	echo
+	"<style type='text/css'>
+	#author-bio-box {
+		border: 1px solid #bbb;
+		background: #eee;
+		padding: 5px;
+	}
+
+	#author-bio-box img {
+		float: left;
+		margin-right: 10px;
+	}
+
+#author-bio-box .author-name {
+    font-size: 12px;
+    font-weight: normal;
+    margin: 0;
+}
+
+	#author-bio-box p {
+		font-size: 10px;
+		line-height: 14px;
+		font-style: italic;
+	}
+
+	.spacer { display: block; clear: both; }
+	</style>";
+}
 
 function callpostcnt($content) {
 	global $post;
 	$theme_name = get_current_theme();
 	$wppostreviewbyadmin_guestpage = get_option("wppostreviewbyadmin_guestpage");
-//	if(is_page(get_option('wppostreviewbyadmin_guestpage'))) {
+	//	if(is_page(get_option('wppostreviewbyadmin_guestpage'))) {
 	if($post->ID == get_option('wppostreviewbyadmin_guestpage')) {
 		if($theme_name == "Thesis")	{
 			add_action('thesis_hook_before_post', 'addpostbyuser_func');
@@ -820,26 +955,42 @@ function callpostcnt($content) {
 		}
 	}
 	else {
-		return $content;
+		/*
+		|------------------------------
+		| Show biographical information
+		| below each guest post $bio_box
+		|------------------------------*/
+
+
+		$bio_box =  "<div id='author-bio-box'>".get_post_meta($post->ID, 'Guest-email', true)." 
+            					<span class='author-name'>".$post_author_name."</span> 
+								<span class='author-name'>
+										<label for='bio'>Biographical Info :</label>
+										".get_post_meta($post->ID, 'Bio-info', true) ."
+								</span> 
+            				<div class='spacer'></div> 
+        			</div>";
+		return $content.$bio_box;
 	}
 }
 
 	function wp_insert_userpost($postarr)	{
 	global $wpdb;
 	$post_title			=	$postarr["post_title"];
-	$post_author_name	=	$postarr["posted_aname"].''.$postarr["posted_lname"];
+	$post_author_name	=	$postarr["posted_aname"].$postarr["posted_lname"];
 	$post_author_fname	=	$postarr["posted_aname"];
 	$post_author_lname	=	$postarr["posted_lname"];
 	$post_author_email	=	$postarr["posted_aemail"];
 	$post_content		=	$postarr["post_content"];
 	$excerpt			=	$postarr["excerpt"];
 	$post_tags			=	$postarr["tags"];
+	$post_bio			= 	$postarr["post_bio"];
 	$cat_ids			=	$postarr["cat"];
 	$post_status		=	"publish";
 	$post_type			=	"post";
 	$post_date			=	date("Y-m-d H:i:s");
-	$query				=	"INSERT IGNORE INTO ".$wpdb->prefix."usersposts(post_author_name, post_author_fname, post_author_lname, post_author_email, post_date, post_content, post_title, post_excerpt, post_status, post_type, category_ids, post_tags) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)";
-	$query				=	$wpdb->prepare($query, $post_author_name, $post_author_fname, $post_author_lname, $post_author_email, $post_date, $post_content, $post_title, $excerpt, $post_status, $post_type, $cat_ids, $post_tags);
+	$query				=	"INSERT IGNORE INTO ".$wpdb->prefix."usersposts(post_author_name, post_author_fname, post_author_lname, post_author_email, post_date, post_content, post_title, post_excerpt, post_status, post_type, category_ids, post_tags, post_bio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)";
+	$query				=	$wpdb->prepare($query, $post_author_name, $post_author_fname, $post_author_lname, $post_author_email, $post_date, $post_content, $post_title, $excerpt, $post_status, $post_type, $cat_ids, $post_tags, $post_bio);
 	$wpdb->query($query);
 	$spl_id				=	$wpdb->insert_id;
 	if($spl_id != "")	{
@@ -924,6 +1075,15 @@ function callpostcnt($content) {
 				</tr>
 				<tr>
 					<td valign="top" style="color:#4E6E8E;">
+						<font size="2" face="Verdana, Arial, Helvetica, sans-serif;"><strong>Biographical Info</strong></font>
+					</td>
+					<td width="8" valign="top">:</td>
+					<td valign="top" style="color:#4E6E8E;">
+						<font size="2" face="Verdana, Arial, Helvetica, sans-serif;">'.$inspostdetails[0]['post_bio'].'</font>
+					</td>
+				</tr>
+				<tr>
+					<td valign="top" style="color:#4E6E8E;">
 						<font size="2" face="Verdana, Arial, Helvetica, sans-serif;"><strong>Posted on</strong></font>
 					</td>
 					<td width="8" valign="top">:</td>
@@ -937,7 +1097,7 @@ function callpostcnt($content) {
 					</td>
 					<td width="8" valign="top">:</td>
 					<td valign="top" style="color:#4E6E8E;">
-						<font size="2" face="Verdana, Arial, Helvetica, sans-serif;"><a href=" '.get_option('home').'/wp-admin/admin.php?page=wordpressguestpost/wordpressguestpost.php&sns_reviewposts_view=approve&sns_reviewposts_id='.$inspostdetails[0]['ID'].'">Click the link to review and approve posts</a></font>
+						<font size="2" face="Verdana, Arial, Helvetica, sans-serif;"><a href=" '.get_option('home').'/wp-admin/admin.php?page=wordpress-guest-post/wordpressguestpost.php&sns_reviewposts_view=approve&sns_reviewposts_id='.$inspostdetails[0]['ID'].'">Click the link to review and approve posts</a></font>
 					</td>
 				</tr>';
 				$StrMailcontent .= '<tr><td colspan="3">&nbsp;</td></tr>
