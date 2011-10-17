@@ -4,7 +4,7 @@ Plugin Name: Wordpress Guest Post Plugin
 Plugin URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 Description: The Wordpress Guest Post plugin is a simple plugin that allows you to accept, edit, & publishguest posts to your blog without writers having to login to your Wordpress Admin area.Easily obtain guest posts without user registration. Users can add their posts right from a form hosted on a page on your blog. No logging in your Wordpress admin. Effortlessly manage and edit post submissions Customizable post submission notification on site and via email Check out more information at: http://WordpressGuestPost.com
 Author: Lisa Angelettie
-Version: 1.1
+Version: 2.5
 Author URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
 */
 
