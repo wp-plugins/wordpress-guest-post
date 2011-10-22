@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wordpress Guest Post Plugin
 Plugin URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
-Description: The Wordpress Guest Post plugin is a simple plugin that allows you to accept, edit, & publishguest posts to your blog without writers having to login to your Wordpress Admin area.Easily obtain guest posts without user registration. Users can add their posts right from a form hosted on a page on your blog. No logging in your Wordpress admin. Effortlessly manage and edit post submissions Customizable post submission notification on site and via email Check out more information at: http://WordpressGuestPost.com
+Description: Review posts submitted by the users to approval...
 Author: Lisa Angelettie
 Version: 2.5
 Author URI: http://lisaangelettieblog.com/wordpress-guest-post-plugin/
@@ -148,7 +148,7 @@ function wppostreviewbyadmin_styling($Style='original.css')	{
 
 function wppostreviewbyadmin_admin_menus()	{
 	add_menu_page('Wordpress Guest Post', 'Wordpress Guest Post', 8, __FILE__, 'wppostreviewbyadmin_reviewposts');
-	add_submenu_page(__FILE__, 'Settings', 'Settings', 8, 'wppostreviewbyadmin-page', 'wppostreviewbyadmin_settings');
+	add_submenu_page(__FILE__, 'Settings', 'Settings', 8, 'sub-page', 'wppostreviewbyadmin_settings');
 }
 
 function wp_delete_userpost($spl_id)	{
@@ -961,8 +961,15 @@ function callpostcnt($content) {
 		| below each guest post $bio_box
 		|------------------------------*/
 
-
-		$bio_box =  "<div id='author-bio-box'>".get_post_meta($post->ID, 'Guest-email', true)." 
+			$val= "display:none;";
+			if(is_page()){
+				$v = $val; 
+				}
+				$chk_val = "display:none;";
+			if(get_post_meta($post->ID, 'Bio-info', true)==""){
+				$chk_get_val = $chk_val;
+				}
+		$bio_box =  "<div style='".$v.$chk_get_val."'id='author-bio-box'>".get_post_meta($post->ID, 'Guest-email', true)." 
             					<span class='author-name'>".$post_author_name."</span> 
 								<span class='author-name'>
 										<label for='bio'>Biographical Info :</label>
